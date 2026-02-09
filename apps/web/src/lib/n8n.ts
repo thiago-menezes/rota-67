@@ -3,15 +3,14 @@ import type {
   NewsGenerationResponse,
 } from "@rota-67/shared-types";
 
-const N8N_WEBHOOK =
-  process.env.NEXT_PUBLIC_N8N_WEBHOOK ||
-  "http://localhost:5678/webhook/news-generator";
+// Use local API route to proxy to n8n (avoids CORS issues)
+const NEWS_GENERATOR_API = "/api/news-generator";
 
 export async function generateNews(
-  url: string
+  url: string,
 ): Promise<NewsGenerationResponse> {
   try {
-    const response = await fetch(N8N_WEBHOOK, {
+    const response = await fetch(NEWS_GENERATOR_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
