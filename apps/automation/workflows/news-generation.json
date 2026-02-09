@@ -1,0 +1,182 @@
+{
+  "name": "News Generation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "news-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "news-generator"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.url }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Fetch Source Article",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "model": "gemini-2.0-flash-exp",
+        "prompt": "You are a professional journalist. Rewrite the following article in Brazilian Portuguese, maintaining all facts but using your own words and structure. Make it engaging and SEO-friendly.\n\nOriginal article:\n{{ $json.data }}\n\nProvide the output in the following JSON format:\n{\n  \"title\": \"article title\",\n  \"slug\": \"url-friendly-slug\",\n  \"content\": \"full markdown content\",\n  \"excerpt\": \"brief summary (max 150 chars)\",\n  \"imagePrompt\": \"detailed prompt for generating a photorealistic news image\"\n}",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 4096
+        }
+      },
+      "name": "Generate Article Content",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "1",
+          "name": "Google Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json.text;\nconst parsed = JSON.parse(response);\nreturn { json: parsed };"
+      },
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "imageGeneration",
+        "model": "imagen-3.0-generate-001",
+        "prompt": "={{ $json.imagePrompt }}",
+        "options": {
+          "aspectRatio": "16:9",
+          "numberOfImages": 1
+        }
+      },
+      "name": "Generate Featured Image",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "1",
+          "name": "Google Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.STRAPI_URL }}/api/upload",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "strapiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "files",
+              "value": "={{ $binary.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Upload Image to Strapi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 300],
+      "credentials": {
+        "strapiApi": {
+          "id": "2",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.STRAPI_URL }}/api/articles",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "strapiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"title\": \"{{ $('Parse JSON').item.json.title }}\",\n    \"slug\": \"{{ $('Parse JSON').item.json.slug }}\",\n    \"content\": \"{{ $('Parse JSON').item.json.content }}\",\n    \"excerpt\": \"{{ $('Parse JSON').item.json.excerpt }}\",\n    \"sourceUrl\": \"{{ $('Webhook').item.json.body.url }}\",\n    \"featuredImage\": {{ $json[0].id }},\n    \"publishedAt\": \"{{ $now.toISO() }}\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Create Article in Strapi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1450, 300],
+      "credentials": {
+        "strapiApi": {
+          "id": "2",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"slug\": \"{{ $json.data.slug }}\",\n  \"message\": \"Article published successfully\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.message }}\",\n  \"message\": \"Failed to generate article\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Fetch Source Article", "type": "main", "index": 0 }]]
+    },
+    "Fetch Source Article": {
+      "main": [[{ "node": "Generate Article Content", "type": "main", "index": 0 }]]
+    },
+    "Generate Article Content": {
+      "main": [[{ "node": "Parse JSON", "type": "main", "index": 0 }]]
+    },
+    "Parse JSON": {
+      "main": [[{ "node": "Generate Featured Image", "type": "main", "index": 0 }]]
+    },
+    "Generate Featured Image": {
+      "main": [[{ "node": "Upload Image to Strapi", "type": "main", "index": 0 }]]
+    },
+    "Upload Image to Strapi": {
+      "main": [[{ "node": "Create Article in Strapi", "type": "main", "index": 0 }]]
+    },
+    "Create Article in Strapi": {
+      "main": [[{ "node": "Success Response", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "error-handler"
+  }
+}

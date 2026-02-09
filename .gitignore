@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# Strapi
+apps/cms/build/
+apps/cms/dist/
+apps/cms/.cache/
+apps/cms/public/uploads/
+
+# Environment
+.env
+.env.local
+.env.*.local
+apps/cms/.env
+apps/web/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker
+postgres_data/
+
+# N8N
+apps/automation/.n8n/

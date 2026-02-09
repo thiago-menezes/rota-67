@@ -1,0 +1,42 @@
+{
+  "name": "Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $input.first().json;\nconsole.error('Workflow Error:', {\n  workflow: error.workflow.name,\n  execution: error.execution.id,\n  error: error.error.message,\n  node: error.node?.name,\n  timestamp: new Date().toISOString()\n});\n\nreturn {\n  json: {\n    success: false,\n    error: error.error.message || 'Unknown error occurred',\n    node: error.node?.name || 'Unknown node'\n  }\n};"
+      },
+      "name": "Log Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Log Error", "type": "main", "index": 0 }]]
+    },
+    "Log Error": {
+      "main": [[{ "node": "Error Response", "type": "main", "index": 0 }]]
+    }
+  }
+}

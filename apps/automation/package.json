@@ -1,0 +1,6 @@
+{
+  "name": "@rota-67/automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "N8N workflow definitions for Rota-67 news automation"
+}

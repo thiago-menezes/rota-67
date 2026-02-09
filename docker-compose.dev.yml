@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=rota67
+      - POSTGRES_USER=strapi
+      - POSTGRES_PASSWORD=strapi_password
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U strapi -d rota67"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - STRAPI_URL=http://host.docker.internal:1337
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - n8n_data_dev:/home/node/.n8n
+
+volumes:
+  postgres_data_dev:
+  n8n_data_dev:
