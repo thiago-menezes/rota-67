@@ -2,7 +2,7 @@ services:
   cms:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "1337:1337"
     environment:
@@ -53,4 +53,4 @@ volumes:
 
 networks:
   rota67:
-    driver: bridge
+    external: true
