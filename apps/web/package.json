@@ -10,8 +10,8 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
-    "@rota-67/shared-types": "workspace:*",
-    "next": "^15.1.0",
+    "@rota-67/shared-types": "*",
+    "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@google/genai": "^1.40.0",
-    "@rota-67/typescript-config": "workspace:*",
+    "@rota-67/typescript-config": "*",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.0.0",

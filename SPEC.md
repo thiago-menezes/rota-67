@@ -52,9 +52,8 @@ Monorepo with event-driven architecture using webhook-based async processing.
 ```
 
 news-automation/
-├── package.json
+├── package.json (with npm workspaces)
 ├── turbo.json
-├── pnpm-workspace.yaml
 ├── .env.example
 ├── apps/
 │ ├── web/ # Next.js frontend
@@ -731,6 +730,7 @@ export default [
 **Required Permissions:**
 
 - **Public Role:**
+
   - `article.find` (GET /api/articles)
   - `article.findOne` (GET /api/articles/:id)
 
@@ -1579,7 +1579,7 @@ If Imagen 3 is not available:
 pnpm dev
 
 # Build for production
-pnpm build
+npm run build
 
 # Run linter
 pnpm lint

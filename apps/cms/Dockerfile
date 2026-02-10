@@ -1,15 +1,14 @@
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev
 
 # --- Dependencies ---
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY package.json package-lock.json .npmrc ./
 COPY apps/cms/package.json ./apps/cms/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/shared-types/package.json ./packages/shared-types/
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
 # --- Builder ---
 FROM base AS builder
@@ -17,7 +16,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 WORKDIR /app/apps/cms
-RUN pnpm build
+RUN npm run build
 
 # --- Runner ---
 FROM node:20-alpine AS runner

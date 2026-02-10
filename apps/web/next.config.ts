@@ -3,20 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    dangerouslyAllowAllPrivateIPs: true,
     remotePatterns: [
       {
         protocol: "http",
         hostname: "localhost",
         port: "1337",
-      },
-      {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
+        pathname: "/uploads/**",
       },
       {
         protocol: "http",
-        hostname: "cms",
+        hostname: "127.0.0.1",
         port: "1337",
+        pathname: "/uploads/**",
       },
     ],
   },

@@ -16,12 +16,6 @@ apps/cms/dist/
 apps/cms/.cache/
 apps/cms/public/uploads/
 
-# Environment
-.env
-.env.local
-.env.*.local
-apps/cms/.env
-apps/web/.env.local
 
 # IDE
 .vscode/

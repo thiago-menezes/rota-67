@@ -1,14 +1,13 @@
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+FROM node:20 AS base
 
 # --- Dependencies ---
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY package.json package-lock.json .npmrc ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
-RUN pnpm install --frozen-lockfile
+RUN npm install
 
 # --- Builder ---
 FROM base AS builder
@@ -17,10 +16,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules/
 COPY . .
 WORKDIR /app/apps/web
-RUN pnpm build
+RUN npm run build
 
 # --- Runner ---
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
