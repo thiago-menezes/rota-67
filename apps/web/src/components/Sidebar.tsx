@@ -1,4 +1,4 @@
-import type { Article } from "@rota-67/shared-types";
+import type { Article } from "@/types";
 import Link from "next/link";
 
 type Props = {

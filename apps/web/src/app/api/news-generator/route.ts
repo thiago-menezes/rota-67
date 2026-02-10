@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type {
-  NewsGenerationRequest,
-  NewsGenerationResponse,
-} from "@rota-67/shared-types";
+import type { NewsGenerationRequest, NewsGenerationResponse } from "@/types";
 import { GoogleGenAI } from "@google/genai";
 
 const N8N_WEBHOOK = process.env.N8N_WEBHOOK;

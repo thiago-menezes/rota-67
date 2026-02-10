@@ -1,0 +1,19 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - STRAPI_URL=${STRAPI_URL}
+      - STRAPI_API_KEY=${STRAPI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - N8N_WEBHOOK=${N8N_WEBHOOK}
+    networks:
+      - rota67
+    restart: unless-stopped
+
+networks:
+  rota67:
+    driver: bridge

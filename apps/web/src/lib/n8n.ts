@@ -1,7 +1,4 @@
-import type {
-  NewsGenerationRequest,
-  NewsGenerationResponse,
-} from "@rota-67/shared-types";
+import type { NewsGenerationRequest, NewsGenerationResponse } from "@/types";
 
 // Use local API route to proxy to n8n (avoids CORS issues)
 const NEWS_GENERATOR_API = "/api/news-generator";

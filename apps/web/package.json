@@ -1,16 +1,16 @@
 {
-  "name": "@rota-67/web",
-  "version": "0.1.0",
+  "name": "rota-67-web",
+  "type": "module",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "clean": "rm -rf .next .turbo"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {
-    "@rota-67/shared-types": "*",
     "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@google/genai": "^1.40.0",
-    "@rota-67/typescript-config": "*",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.0.0",

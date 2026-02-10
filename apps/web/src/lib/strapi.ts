@@ -1,4 +1,4 @@
-import type { Article, StrapiResponse } from "@rota-67/shared-types";
+import type { Article, StrapiResponse } from "@/types";
 
 const STRAPI_URL = process.env.STRAPI_URL || "http://localhost:1337";
 const STRAPI_API_KEY = process.env.STRAPI_API_KEY;

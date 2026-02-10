@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FeaturedHero } from "@/components/FeaturedHero";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Sidebar } from "@/components/Sidebar";
-import type { Article } from "@rota-67/shared-types";
+import type { Article } from "@/types";
 
 export const dynamic = "force-dynamic";
 

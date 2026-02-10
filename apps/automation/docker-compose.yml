@@ -1,0 +1,25 @@
+services:
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rota67-automation
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env.local
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-change-me}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - STRAPI_URL=${STRAPI_URL:-http://host.docker.internal:1337}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:

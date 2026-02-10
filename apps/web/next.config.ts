@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
-    dangerouslyAllowAllPrivateIPs: true,
+    dangerouslyAllowLocalIP: true,
     remotePatterns: [
       {
         protocol: "http",
