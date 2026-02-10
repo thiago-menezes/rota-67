@@ -1,2 +1,87 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700;900&family=Open+Sans:wght@400;500;600;700&display=swap");
+
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  --color-primary: #FFAE00;
+  --color-primary-hover: #E09A00;
+  --color-dark: #111111;
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-text: #111111;
+  --color-text-muted: #666666;
+  --color-border: #e2e2e2;
+  --font-display: "Roboto Slab", serif;
+  --font-sans: "Open Sans", sans-serif;
+  --font-serif: "Open Sans", sans-serif;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-dark);
+  color: var(--color-primary);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ── Typography ──────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+/* Hover scale for image cards */
+.img-hover-zoom {
+  overflow: hidden;
+}
+.img-hover-zoom img {
+  transition: transform 0.5s ease;
+}
+.img-hover-zoom:hover img {
+  transform: scale(1.05);
+}

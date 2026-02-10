@@ -4,7 +4,6 @@ import type {
   NewsGenerationResponse,
 } from "@rota-67/shared-types";
 import { GoogleGenAI } from "@google/genai";
-import fs from "fs";
 
 const N8N_WEBHOOK = process.env.N8N_WEBHOOK;
 const STRAPI_URL = process.env.STRAPI_URL;
@@ -54,9 +53,7 @@ export async function POST(request: NextRequest) {
 
     const data = (await response.json()) as NewsN8nResponse;
 
-    await generateImage(data);
-
-    return NextResponse.json(data);
+    return await generateImage(data);
   } catch (error) {
     return NextResponse.json(
       {
@@ -72,12 +69,25 @@ async function generateImage(responseN8n: NewsN8nResponse) {
   const ai = new GoogleGenAI({});
 
   try {
-    const prompt = `A imagem deve parecer uma foto real capturada por uma câmera DSLR profissional, com iluminação natural, profundidade de campo realista, foco preciso e composição fotográfica cuidadosa.\nRetrate a cena, o ambiente ou os elementos visuais que melhor representem o significado da notícia de forma sutil e simbólica, sem uso de metáforas gráficas.\nNão incluir texto, letras, legendas, tipografia, ícones, logotipos, ilustrações ou elementos gráficos.\nEstilo: fotografia jornalística ou documental, altamente realista.\nEnquadramento: horizontal (formato 5:4).\nAparência: cores naturais, textura fotográfica autêntica, leve granulação realista de câmera, sem aparência de ilustração ou arte digital. Gere uma fotografia realista e cinematográfica, inspirada no contexto e na atmosfera da seguinte notícia: ${responseN8n.content}`;
+    const prompt = `IMPORTANT: The image MUST be generated in HORIZONTAL orientation (landscape), with width greater than height.
+The image should look like a real photo captured by a professional DSLR camera, with natural lighting, realistic depth of field, precise focus, and careful photographic composition.
+Portray the scene, environment, or visual elements that best represent the meaning of the news in a subtle and symbolic way, without the use of graphic metaphors.
+Do not include text, letters, captions, typography, icons, logos, illustrations, or graphic elements.
+CRITICAL: The image must NOT contain any graphic elements such as charts, diagrams, infographics, or visual overlays.
+CRITICAL: If the scene naturally contains readable text (such as signs, newspapers, billboards, storefronts, or documents), ensure there are NO spelling errors or typos. Prefer to keep text blurred, out of focus, or at an angle where it is not fully readable to avoid orthographic mistakes.
+Style: journalistic or documentary photography, highly realistic.
+Framing: horizontal (16:9 or 5:4 format, landscape).
+Appearance: natural colors, authentic photographic texture, slight realistic camera grain, no illustration or digital art appearance.
+Generate a realistic and cinematic photograph, inspired by the context and atmosphere of the following news article: ${responseN8n.content}
+Please respond in Portuguese (Brazilian).`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
       contents: prompt,
     });
+
+    let imageBuffer: Buffer | null = null;
+
     for (const part of response?.candidates?.[0]?.content?.parts as {
       text: string;
       inlineData: {
@@ -89,30 +99,114 @@ async function generateImage(responseN8n: NewsN8nResponse) {
         console.log(part?.text);
       } else if (part.inlineData) {
         const imageData = part.inlineData.data;
-        const buffer = Buffer.from(imageData, "base64");
-        fs.writeFileSync("gemini-native-image.png", buffer);
-        console.log("Image saved as gemini-native-image.png");
+        imageBuffer = Buffer.from(imageData, "base64");
+        console.log("Image generated successfully");
       }
     }
+
+    const articleData = {
+      title: responseN8n.title,
+      content: responseN8n.content,
+      excerpt: responseN8n.excerpt,
+      slug: responseN8n.slug,
+      sourceUrl: responseN8n.sourceUrl,
+    };
+
+    console.log("Creating article in Strapi:", articleData);
 
     const strapiResponse = await fetch(`${STRAPI_URL}/api/articles`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}`,
+        Authorization: `Bearer ${process.env.STRAPI_API_KEY}`,
       },
-      body: JSON.stringify({
-        title: responseN8n.title,
-        content: responseN8n.content,
-        featuredImage: "gemini-native-image.png",
-        excerpt: responseN8n.excerpt,
-        slug: responseN8n.slug,
-        sourceUrl: responseN8n.sourceUrl,
-      }),
+      body: JSON.stringify({ data: articleData }),
     });
 
-    console.log({ strapiResponse });
+    if (!strapiResponse.ok) {
+      const errorData = await strapiResponse.json();
+      console.error("Strapi create article error:", errorData);
+      return NextResponse.json(
+        { success: false, error: "Failed to create article in Strapi" },
+        { status: strapiResponse.status },
+      );
+    }
+
+    const createdArticle = await strapiResponse.json();
+    const articleId = createdArticle.data?.documentId;
+    console.log("Article created with ID:", articleId);
+
+    if (imageBuffer && articleId) {
+      const formData = new FormData();
+
+      const imageBlob = new Blob([new Uint8Array(imageBuffer)], {
+        type: "image/png",
+      });
+      formData.append("files", imageBlob, `${responseN8n.slug}.png`);
+
+      console.log("Uploading image...");
+
+      const uploadResponse = await fetch(`${STRAPI_URL}/api/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.STRAPI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const uploadError = await uploadResponse.json();
+        console.error("Strapi upload error:", uploadError);
+      } else {
+        const uploadedFiles = await uploadResponse.json();
+        const fileId = uploadedFiles[0]?.id;
+        console.log("Image uploaded with ID:", fileId);
+
+        if (fileId) {
+          const updateResponse = await fetch(
+            `${STRAPI_URL}/api/articles/${articleId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.STRAPI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                data: {
+                  featuredImage: fileId,
+                },
+              }),
+            },
+          );
+
+          if (!updateResponse.ok) {
+            const updateError = await updateResponse.json();
+            console.error("Failed to link image to article:", updateError);
+          } else {
+            console.log("Image linked to article successfully");
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      title: responseN8n.title,
+      content: responseN8n.content,
+      excerpt: responseN8n.excerpt,
+      slug: responseN8n.slug,
+      sourceUrl: responseN8n.sourceUrl,
+      articleId,
+    });
   } catch (error) {
     console.error("Error generating image:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Image generation failed",
+      },
+      { status: 500 },
+    );
   }
 }

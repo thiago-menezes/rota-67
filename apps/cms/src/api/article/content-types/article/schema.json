@@ -39,6 +39,11 @@
     "sourceUrl": {
       "type": "string",
       "required": true
+    },
+    "isFeatured": {
+      "type": "boolean",
+      "default": false,
+      "required": false
     }
   }
 }

@@ -30,6 +30,7 @@ export interface Article {
   excerpt: string;
   featuredImage: StrapiImage;
   sourceUrl: string;
+  isFeatured: boolean;
   publishedAt: string;
   createdAt: string;
   updatedAt: string;
