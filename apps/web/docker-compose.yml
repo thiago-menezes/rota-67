@@ -16,4 +16,3 @@ services:
 
 networks:
   rota67:
-    external: true
