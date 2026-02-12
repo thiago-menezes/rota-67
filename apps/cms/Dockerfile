@@ -51,12 +51,15 @@ COPY --from=builder --chown=nodejs:nodejs /opt/app/package.json ./package.json
 COPY --from=builder --chown=nodejs:nodejs /opt/app/public ./public
 # Copy built application and necessary files
 COPY --from=builder --chown=nodejs:nodejs /opt/app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /opt/app/dist/config ./config
+COPY --from=builder --chown=nodejs:nodejs /opt/app/dist/build ./build
 COPY --from=builder --chown=nodejs:nodejs /opt/app/package.json ./package.json
 COPY --from=builder --chown=nodejs:nodejs /opt/app/public ./public
 COPY --from=builder --chown=nodejs:nodejs /opt/app/node_modules ./node_modules
 
-# Create uploads directory with correct permissions
-RUN mkdir -p public/uploads && chown -R nodejs:nodejs public/uploads
+# Create necessary directories with correct permissions
+RUN mkdir -p public/uploads database .tmp .cache && \
+    chown -R nodejs:nodejs public/uploads database .tmp .cache
 
 # Switch to non-root user
 USER nodejs
