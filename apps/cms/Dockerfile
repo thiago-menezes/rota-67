@@ -49,7 +49,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nodejs:nodejs /opt/app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /opt/app/package.json ./package.json
 COPY --from=builder --chown=nodejs:nodejs /opt/app/public ./public
-COPY --from=builder --chown=nodejs:nodejs /opt/app/config ./config
+# Copy built application and necessary files
+COPY --from=builder --chown=nodejs:nodejs /opt/app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /opt/app/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /opt/app/public ./public
 COPY --from=builder --chown=nodejs:nodejs /opt/app/node_modules ./node_modules
 
 # Create uploads directory with correct permissions
@@ -67,5 +70,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Start the application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/server.js"]
+CMD ["npm", "run", "start"]
 
